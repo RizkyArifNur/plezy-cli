@@ -1,6 +1,7 @@
 import { GluegunToolbox } from 'gluegun'
 import { Project } from 'ts-morph'
 import { TsMorph } from './ts-morph'
+import { format } from 'prettier'
 
 export class Utils {
   context: GluegunToolbox
@@ -35,5 +36,47 @@ export class Utils {
 
     this.project.addExistingSourceFile(filePath)
     return new TsMorph(this.context, this.project, filePath)
+  }
+
+  /**
+   * get prettier config from root project, with the identifier is file .prettierrc
+   */
+
+  getPrettierConfig() {
+    const {
+      filesystem: { read, cwd }
+    } = this.context
+
+    const prettierConfig = read(cwd('.prettierrc').cwd())
+    if (!prettierConfig) {
+      return {
+        semi: false,
+        singleQuote: true
+      }
+    }
+    return JSON.parse(prettierConfig)
+  }
+
+  /**
+   * Format sourcecode
+   * @param filePath location of file to save
+   * @param source contents of file that want to be formated
+   */
+  prettify(filePath: string, source?: string) {
+    const {
+      filesystem: { write, read }
+    } = this.context
+
+    if (!source) {
+      source = read(filePath)
+    }
+
+    write(
+      filePath,
+      format(source, {
+        parser: 'typescript',
+        ...this.getPrettierConfig()
+      })
+    )
   }
 }
