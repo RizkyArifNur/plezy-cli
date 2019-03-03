@@ -114,13 +114,43 @@ export class Utils {
       filesystem: { inspectTreeAsync }
     } = this.context
 
-    const tree = (inspectTreeAsync(
+    const tree = ((await inspectTreeAsync(
       directory
-    ) as any) as GluegunFileSystemInspectTreeResult
+    )) as any) as GluegunFileSystemInspectTreeResult
     if (!tree || !tree.children || !tree.children.length) {
       return []
     }
 
-    return tree.children.filter(children => children.type === 'file')
+    return tree.children.filter(child => child.type === 'file')
+  }
+
+  /**
+   * get directory inside of target directory
+   * @param directory path to directory
+   */
+  async dirList(directory: string) {
+    const {
+      filesystem: { inspectTreeAsync }
+    } = this.context
+    const tree = ((await inspectTreeAsync(
+      directory
+    )) as any) as GluegunFileSystemInspectTreeResult
+    if (!tree || !tree.children || !tree.children.length) {
+      return []
+    }
+
+    return tree.children.filter(child => child.type === 'dir')
+  }
+
+  /**
+   * get directory names inside of target directory
+   * @param directory
+   */
+  async getDirNames(directory: string) {
+    const dirs = (await this.dirList(directory)).map(d => '/' + d.name)
+    if (dirs.length) {
+      dirs.splice(0, 0, '/')
+    }
+    return dirs
   }
 }
