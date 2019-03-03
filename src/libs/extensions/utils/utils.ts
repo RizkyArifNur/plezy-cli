@@ -2,6 +2,8 @@ import { GluegunToolbox } from 'gluegun'
 import { Project } from 'ts-morph'
 import { TsMorph } from './ts-morph'
 import { format } from 'prettier'
+import * as path from 'path'
+import { GluegunFileSystemInspectTreeResult } from 'gluegun-fix'
 
 export class Utils {
   context: GluegunToolbox
@@ -78,5 +80,47 @@ export class Utils {
         ...this.getPrettierConfig()
       })
     )
+  }
+
+  /**
+   * get relative path from target to source
+   * @param source source path
+   * @param target target path
+   */
+
+  relativePath(source: string, target: string) {
+    const {
+      filesystem: { cwd }
+    } = this.context
+    let result = path.relative(
+      cwd(path.join('src', target)).cwd(),
+      cwd(path.join('src', source)).cwd()
+    )
+
+    const info = path.parse(result)
+    if (info.dir.indexOf('..') > 0) {
+      result = `.` + path.sep + result
+    }
+
+    return result.replace(/\\/g, '/')
+  }
+
+  /**
+   * get file list of directory
+   * @param directory path to directory
+   */
+  async fileList(directory: string) {
+    const {
+      filesystem: { inspectTreeAsync }
+    } = this.context
+
+    const tree = (inspectTreeAsync(
+      directory
+    ) as any) as GluegunFileSystemInspectTreeResult
+    if (!tree || !tree.children || !tree.children.length) {
+      return []
+    }
+
+    return tree.children.filter(children => children.type === 'file')
   }
 }
