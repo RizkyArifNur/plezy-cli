@@ -35,7 +35,7 @@ export class Utils {
     }
 
     this.project.addExistingSourceFile(filePath)
-    return new TsMorph(this.context, this.project, filePath)
+    return new TsMorph(this.context, this.project, filePath, this)
   }
 
   /**

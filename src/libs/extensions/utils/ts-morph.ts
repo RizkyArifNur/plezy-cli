@@ -1,19 +1,27 @@
 import { GluegunToolbox } from 'gluegun'
 import Project, { SourceFile } from 'ts-morph'
 import * as R from 'ramda'
+import { Utils } from './utils'
 
 export class TsMorph {
   context: GluegunToolbox
   project: Project
   sourceFile: SourceFile
   filePath: string
-  constructor(context: GluegunToolbox, project: Project, filePath: string) {
+  utils: Utils
+  constructor(
+    context: GluegunToolbox,
+    project: Project,
+    filePath: string,
+    utils: Utils
+  ) {
     const {
       filesystem: { cwd }
     } = context
     this.context = context
     this.project = project
     this.sourceFile = project.getSourceFile(cwd(filePath).cwd())
+    this.utils = utils
   }
 
   addNamedImports(fromModule: string, namedImports: string[]) {
@@ -33,5 +41,10 @@ export class TsMorph {
       moduleSpecifier: fromModule,
       namedImports: R.uniq([...namedImports, ...existingNamedImports]).sort()
     })
+  }
+
+  save() {
+    const { prettify } = this.utils
+    prettify(this.sourceFile.getFilePath(), this.sourceFile.getText())
   }
 }
